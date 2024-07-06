@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
-	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type person struct {
@@ -28,42 +29,56 @@ var all = []person{
 }
 
 func main() {
-
-	// res, err := json.Marshal(all)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println("Marshaled data:", string(res))
-
-	// detail := []person{}
-	// err = json.Unmarshal(res, &detail)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println("Unmarshaled data:", detail)
-	http.HandleFunc("/new/person", NewPerson)
-	http.HandleFunc("/all/person", allPerson)
-	http.ListenAndServe(":8080", nil)
-
-}
-func NewPerson(w http.ResponseWriter, r *http.Request) {
-	var newPerson person
-	json.NewDecoder(r.Body).Decode(&newPerson)
-	all = append(all, newPerson)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(all)
+	// http.HandleFunc("/new/person", NewPerson)
+	// http.HandleFunc("/all/person", allPerson)
+	// http.ListenAndServe(":8080", nil)
+	pass := "12345678"
+	pass2 := "798832"
+	hashedPas, err := hashPassword(pass)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-}
-
-func allPerson(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(all)
+	err = compareHashPass(hashedPas, []byte(pass2))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Not loged in")
 	}
+	log.Println("Loged In")
 }
+
+func hashPassword(password string) ([]byte, error) {
+	hasedpass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("error while generateing bcrypt hash from password %w", err)
+	}
+	return hasedpass, nil
+}
+
+func compareHashPass(hashPass, password []byte) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashPass), []byte(password))
+	if err != nil {
+		return fmt.Errorf("invalid password %w", err)
+	}
+	return nil
+}
+
+// func NewPerson(w http.ResponseWriter, r *http.Request) {
+// 	var newPerson person
+// 	json.NewDecoder(r.Body).Decode(&newPerson)
+// 	all = append(all, newPerson)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	err := json.NewEncoder(w).Encode(all)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
+
+// func allPerson(w http.ResponseWriter, r *http.Request) {
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	err := json.NewEncoder(w).Encode(all)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }

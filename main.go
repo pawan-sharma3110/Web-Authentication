@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
+	"net/http"
 )
 
 type person struct {
@@ -11,32 +11,59 @@ type person struct {
 	LastName  string `json:"last_name"`
 }
 
-func main() {
-	p1 := person{
-		FirstName: "Pawan",
-		LastName:  "Sharma",
-	}
-	p3 := person{
-		FirstName: "Ashu",
-		LastName:  "Kala",
-	}
-	p2 := person{
-		FirstName: "Ravi",
-		LastName:  "Sharma",
-	}
-	all := []person{
-		p1, p2, p3,
-	}
-	res, err := json.Marshal(all)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Marshaled data:", string(res))
+var P1 = person{
+	FirstName: "Pawan",
+	LastName:  "Sharma",
+}
+var P3 = person{
+	FirstName: "Ashu",
+	LastName:  "Kala",
+}
+var P2 = person{
+	FirstName: "Ravi",
+	LastName:  "Sharma",
+}
+var all = []person{
+	P1, P2, P3,
+}
 
-	detail := []person{}
-	err = json.Unmarshal(res, &detail)
+func main() {
+
+	// res, err := json.Marshal(all)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("Marshaled data:", string(res))
+
+	// detail := []person{}
+	// err = json.Unmarshal(res, &detail)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("Unmarshaled data:", detail)
+	http.HandleFunc("/new/person", NewPerson)
+	http.HandleFunc("/all/person", allPerson)
+	http.ListenAndServe(":8080", nil)
+
+}
+func NewPerson(w http.ResponseWriter, r *http.Request) {
+	var newPerson person
+	json.NewDecoder(r.Body).Decode(&newPerson)
+	all = append(all, newPerson)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(all)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Unmarshaled data:", detail)
+}
+
+func allPerson(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(all)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

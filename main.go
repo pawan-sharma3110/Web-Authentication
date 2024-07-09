@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -26,6 +27,7 @@ func main() {
 	http.HandleFunc("/login", loginUser)
 	http.Handle("/protected", jwtMiddleware(http.HandlerFunc(protectedEndpoint)))
 	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Server run on port :8080")
 }
 
 func init() {
